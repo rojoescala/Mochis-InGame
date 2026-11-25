@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#111">
+<title>Mochis: Ruta Robada</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="topRight">
+    <div id="money">$0</div>
+    <div id="stars"></div>
+    <div id="weapon"></div>
+  </div>
+  <div id="topLeft">
+    <div class="bar"><div id="hpBar"></div></div>
+    <div id="carInfo"></div>
+  </div>
+  <div id="mission"></div>
+  <div id="street"></div>
+  <div id="bigText"></div>
+  <div id="toast"></div>
+  <canvas id="minimap" width="180" height="180"></canvas>
+</div>
+
+<div id="touch" class="hidden">
+  <div id="stick"><div id="knob"></div></div>
+  <div id="btns">
+    <button data-k="fire" class="b">🔫</button>
+    <button data-k="enter" class="b">🚗</button>
+    <button data-k="brake" class="b">✋</button>
+    <button data-k="map" class="b small">🗺️</button>
+  </div>
+</div>
+
+<div id="bigmap" class="hidden"><canvas id="bigmapCanvas"></canvas><div class="hint">Toca o pulsa M para cerrar</div></div>
+
+<div id="title">
+  <div class="box">
+    <h1>MOCHIS<span>RUTA ROBADA</span></h1>
+    <p class="sub">Las calles reales de Los Mochis, Sinaloa. Roba carros, haz encargos para el taller y no dejes que te agarre la patrulla.</p>
+    <button id="play">JUGAR</button>
+    <div class="keys">
+      <b>Teclado:</b> WASD / flechas = moverse/manejar · <b>E</b> = robar/salir del carro · <b>Espacio</b> = freno de mano ·
+      <b>J</b> o clic = disparar · <b>M</b> = mapa · <b>H</b> = claxon<br>
+      <b>Celular:</b> joystick a la izquierda, botones a la derecha.
+    </div>
+    <p class="osm">Mapa: © colaboradores de OpenStreetMap (ODbL). Edificios generados.</p>
+  </div>
+</div>
+
+<script src="data/mochis.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
