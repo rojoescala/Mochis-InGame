@@ -22,10 +22,12 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #111; color:
 #mission { position: absolute; top: 74px; left: 50%; transform: translateX(-50%); max-width: 92vw;
   font-size: 15px; background: rgba(0,0,0,.55); padding: 6px 12px; border-radius: 6px; text-align: center; }
 #mission:empty { display: none; }
-#street { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); font-size: 26px; font-weight: 900;
-  color: #fff; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000; opacity: 0; transition: opacity .6s; white-space: nowrap;
-  font-style: italic; }
-#street.show { opacity: 1; }
+#street { position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); text-align: center;
+  background: rgba(0,0,0,.5); padding: 6px 14px; border-radius: 8px; max-width: min(560px, 60vw); }
+#street .st { font-size: 20px; font-weight: 900; font-style: italic; text-shadow: 2px 2px 0 #000; }
+#street .cs { font-size: 14px; opacity: .9; }
+#street .poi { font-size: 13px; color: #ffe36e; margin-top: 2px; }
+#overlay { position: fixed; inset: 0; pointer-events: none; }
 #bigText { position: absolute; top: 38%; width: 100%; text-align: center; font-size: 64px; font-weight: 900;
   text-shadow: 4px 4px 0 #000; letter-spacing: 4px; }
 #toast { position: absolute; top: 120px; width: 100%; text-align: center; font-size: 20px; font-weight: bold;
@@ -44,14 +46,24 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #111; color:
 #btns .b.small { font-size: 22px; }
 #btns .b.down { background: rgba(255,255,255,.3); }
 body.touch #minimap { left: 14px; top: calc(max(10px, env(safe-area-inset-top)) + 70px); bottom: auto; width: 100px; height: 100px; }
-body.touch #mission { top: auto; bottom: calc(max(18px, env(safe-area-inset-bottom)) + 170px); font-size: 13px; }
+body.touch #mission { top: auto; left: 14px; transform: none; text-align: left; bottom: calc(max(18px, env(safe-area-inset-bottom)) + 168px); font-size: 11px; max-width: 58vw; padding: 4px 8px; }
 body.touch #toast { top: calc(max(10px, env(safe-area-inset-top)) + 180px); font-size: 16px; padding: 0 12px; }
-body.touch #street { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 220px); }
+body.touch #street { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 120px); left: auto; right: 10px; transform: none; max-width: 62vw; text-align: right; }
+body.touch #street .st { font-size: 15px; } body.touch #street .cs, body.touch #street .poi { font-size: 12px; }
 
-#bigmap { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; flex-direction: column; }
-#bigmapCanvas { max-width: 96vw; max-height: 88vh; }
-#bigmap .hint { margin-top: 8px; opacity: .7; font-size: 14px; }
-
+#bigmap { position: fixed; inset: 0; background: #242424; }
+#bigmapCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+#bigmap .maphint { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); font-size: 13px;
+  background: rgba(0,0,0,.6); padding: 5px 12px; border-radius: 6px; pointer-events: none; text-align: center; max-width: 80vw; }
+#bigmap .mapbtns { position: absolute; right: 14px; top: max(14px, env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 10px; }
+#bigmap .mapbtns button { width: 48px; height: 48px; border-radius: 10px; border: 2px solid rgba(255,255,255,.4); background: rgba(0,0,0,.6);
+  color: #fff; font-size: 24px; cursor: pointer; }
+#tpBox { position: absolute; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(0,0,0,.85);
+  border: 2px solid #ff4081; border-radius: 12px; padding: 12px 16px; text-align: center; min-width: 240px; max-width: 90vw; }
+#tpBox small { opacity: .85; }
+#tpBox .tpb { margin-top: 10px; display: flex; gap: 10px; justify-content: center; }
+#tpBox button { font-size: 17px; font-weight: bold; padding: 8px 18px; border-radius: 8px; border: 0; cursor: pointer; }
+#tpGo { background: #ffd23f; color: #111; } #tpCancel { background: #555; color: #fff; }
 #title { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(ellipse at center, rgba(20,20,20,.55), rgba(0,0,0,.9)); padding: 16px; }
 #title .box { max-width: 560px; text-align: center; }
@@ -67,7 +79,6 @@ body.touch #street { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 220px
 @media (max-width: 600px) {
   #money { font-size: 24px; } #stars { font-size: 20px; }
   #topLeft { width: 140px; }
-  #street { font-size: 18px; bottom: 30%; }
   #bigText { font-size: 44px; }
   #mission { top: 64px; font-size: 13px; }
 }

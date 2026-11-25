@@ -9,6 +9,7 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="overlay"></div>
 
 <div id="hud" class="hidden">
   <div id="topRight">
@@ -37,7 +38,20 @@
   </div>
 </div>
 
-<div id="bigmap" class="hidden"><canvas id="bigmapCanvas"></canvas><div class="hint">Toca o pulsa M para cerrar</div></div>
+<div id="bigmap" class="hidden">
+  <canvas id="bigmapCanvas"></canvas>
+  <div class="maphint">Arrastra para mover · rueda o pellizca para acercar · toca un punto para teletransportarte</div>
+  <div class="mapbtns">
+    <button id="mapClose">✕</button>
+    <button id="mapIn">＋</button>
+    <button id="mapOut">－</button>
+    <button id="mapMe">◎</button>
+  </div>
+  <div id="tpBox" class="hidden">
+    <div id="tpText"></div>
+    <div class="tpb"><button id="tpGo">Ir aquí</button><button id="tpCancel">Cancelar</button></div>
+  </div>
+</div>
 
 <div id="title">
   <div class="box">
@@ -46,13 +60,14 @@
     <button id="play">JUGAR</button>
     <div class="keys">
       <b>Teclado:</b> WASD / flechas = moverse/manejar · <b>E</b> = robar/salir del carro · <b>Espacio</b> = freno de mano ·
-      <b>J</b> o clic = disparar · <b>M</b> = mapa · <b>H</b> = claxon<br>
+      <b>J</b> o clic = disparar · <b>M</b> = mapa · <b>H</b> = claxon<br>A pie: <b>W/S</b> avanzar, <b>A/D</b> girar. En el mapa toca un punto para teletransportarte.<br>
       <b>Celular:</b> joystick a la izquierda, botones a la derecha.
     </div>
-    <p class="osm">Mapa: © colaboradores de OpenStreetMap (ODbL). Edificios generados.</p>
+    <p class="osm">Mapa y lugares: © colaboradores de OpenStreetMap (ODbL). Edificios generados. Motor 3D: three.js (MIT).</p>
   </div>
 </div>
 
+<script src="lib/three.min.js"></script>
 <script src="data/mochis.js"></script>
 <script src="game.js"></script>
 </body>

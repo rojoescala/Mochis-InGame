@@ -3,7 +3,9 @@
 en data/mochis.js, el mapa compacto que usa el juego.
 
 Uso:
-  python3 tools/build_map.py raw.json data/mochis.js
+  python3 tools/build_map.py raw.json data/mochis.js [lugares1.json lugares2.json ...]
+
+Los archivos de lugares (opcionales) salen de tools/overpass_pois.txt.
 
 El JSON se obtiene con la consulta en tools/overpass_query.txt:
   curl --data-urlencode data@tools/overpass_query.txt \
@@ -34,7 +36,69 @@ def road_type(hw):
     hw = hw.replace("_link", "")
     return ROAD_TYPES.index(hw) if hw in ROAD_TYPES else None
 
-def main(src, dst):
+SKIP_AMENITY = {"parking", "parking_entrance", "toilets", "bench", "waste_basket", "atm", "vending_machine",
+                "bicycle_parking", "shelter", "drinking_water", "parking_space", "telephone", "recycling"}
+
+def poi_category(t):
+    a, sh, le, to = t.get("amenity", ""), t.get("shop", ""), t.get("leisure", ""), t.get("tourism", "")
+    if a in SKIP_AMENITY:
+        return None
+    if sh == "mall" or a == "marketplace":
+        return 11, 1
+    if a in ("restaurant", "fast_food", "cafe", "bar", "pub", "ice_cream", "food_court", "biergarten"):
+        return 0, 0
+    if a in ("school", "university", "college", "kindergarten", "language_school"):
+        return 2, 1 if a in ("university", "college") else 0
+    if a in ("hospital", "clinic", "doctors", "pharmacy", "dentist"):
+        return 3, 1 if a == "hospital" else 0
+    if a == "place_of_worship":
+        return 4, 1
+    if a in ("bank", "bureau_de_change"):
+        return 5, 0
+    if a in ("townhall", "police", "fire_station", "courthouse", "post_office", "public_building"):
+        return 6, 1
+    if a == "fuel":
+        return 7, 0
+    if to in ("hotel", "motel", "guest_house", "hostel"):
+        return 8, 0
+    if le in ("park", "garden", "playground", "dog_park"):
+        return 9, 1 if le == "park" else 0
+    if le in ("stadium", "sports_centre", "pitch", "fitness_centre", "swimming_pool", "track"):
+        return 10, 1 if le == "stadium" else 0
+    if a in ("theatre", "cinema", "arts_centre", "library", "community_centre") or to in ("museum", "attraction", "artwork", "gallery") or t.get("historic"):
+        return 12, 1
+    if sh in ("supermarket", "department_store", "wholesale"):
+        return 1, 1
+    if sh:
+        return 1, 0
+    if a or to or le:
+        return 13, 0
+    return None
+
+def load_pois(files):
+    seen, out = set(), []
+    for fn in files:
+        for el in json.load(open(fn)).get("elements", []):
+            t = el.get("tags", {})
+            name = t.get("name", "").strip()
+            if not name:
+                continue
+            lat = el.get("lat") or el.get("center", {}).get("lat")
+            lon = el.get("lon") or el.get("center", {}).get("lon")
+            if lat is None:
+                continue
+            cat = poi_category(t)
+            if not cat:
+                continue
+            key = (name.lower(), round(lat, 3), round(lon, 3))
+            if key in seen:
+                continue
+            seen.add(key)
+            x, y = proj(lat, lon)
+            out.append([round(x), round(y), cat[0], name, cat[1]])
+    return out
+
+def main(src, dst, poi_files=()):
     raw = json.load(open(src))
     rnd = random.Random(1914)  # año de fundación de la ciudad (aprox.)
     node_index = {}
@@ -180,7 +244,49 @@ def main(src, dst):
                         buildings += [round(cx, 1), round(cy, 1), round(w, 1), round(d, 1),
                                       round(ang, 3), round(h, 1), rnd.randrange(8)]
                     s += w + rnd.uniform(1.5, 6)
-    print(f"edificios={len(buildings)//7}")
+    # ---------- edificios emblemáticos en lugares reales importantes ----------
+    pois = load_pois(poi_files)
+    LANDMARK = {11: (60, 45, 10, 8), 4: (16, 30, 11, 9), 3: (34, 24, 16, 10), 2: (44, 22, 10, 11),
+                6: (26, 20, 13, 12), 10: (70, 50, 9, 13), 12: (24, 22, 11, 14), 1: (40, 30, 8, 8)}
+    road_tree = STRtree(road_geoms)
+    marks = []
+    for x, y, cat, name, imp in pois:
+        if not imp or cat not in LANDMARK:
+            continue
+        w, d, h, col = LANDMARK[cat]
+        # orientar con la calle más cercana
+        near = road_tree.query(Point(x, y).buffer(80))
+        ang = 0.0
+        if len(near):
+            g = min((road_geoms[i] for i in near), key=lambda g: g.distance(Point(x, y)))
+            c = list(g.exterior.coords)
+            best = max(zip(c, c[1:]), key=lambda ab: math.hypot(ab[1][0] - ab[0][0], ab[1][1] - ab[0][1]))
+            ang = math.atan2(best[1][1] - best[0][1], best[1][0] - best[0][0])
+        placed_mark = None
+        for k in range(6):
+            sc = 0.82 ** k
+            rect = affinity.translate(affinity.rotate(box(-w * sc / 2, -d * sc / 2, w * sc / 2, d * sc / 2), ang, use_radians=True), x, y)
+            if not any(road_geoms[i].intersects(rect) for i in road_tree.query(rect)) and not any(m.intersects(rect) for m in marks):
+                placed_mark = (rect, w * sc, d * sc)
+                break
+        if not placed_mark:
+            continue
+        rect, ww, dd = placed_mark
+        marks.append(rect.buffer(2))
+        buildings += [round(x, 1), round(y, 1), round(ww, 1), round(dd, 1), round(ang, 3), h, col]
+    if marks:
+        mt = STRtree(marks)
+        kept = []
+        for i in range(0, len(buildings), 7):
+            bx = buildings[i:i + 7]
+            if bx[6] >= 8:
+                kept += bx
+                continue
+            rect = affinity.translate(affinity.rotate(box(-bx[2] / 2, -bx[3] / 2, bx[2] / 2, bx[3] / 2), bx[4], use_radians=True), bx[0], bx[1])
+            if not any(marks[j].intersects(rect) for j in mt.query(rect)):
+                kept += bx
+        buildings = kept
+    print(f"emblemáticos={len(marks)} edificios={len(buildings)//7}")
 
     xs = [p[0] for p in nodes]; ys = [p[1] for p in nodes]
     out = {
@@ -194,7 +300,9 @@ def main(src, dst):
         "areas": [[a[0], a[1]] + [round(c) for c in a[2:]] for a in areas],
         "water": [[w[0]] + [round(c) for c in w[1:]] for w in water],
         "buildings": buildings,
+        "pois": pois,
     }
+    print(f"lugares={len(out['pois'])}")
     with open(dst, "w") as f:
         f.write("// Generado por tools/build_map.py a partir de datos de OpenStreetMap\n")
         f.write("// (c) colaboradores de OpenStreetMap, licencia ODbL - openstreetmap.org/copyright\n")
@@ -203,4 +311,4 @@ def main(src, dst):
         f.write(";\n")
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3:])

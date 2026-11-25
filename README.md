@@ -1,11 +1,11 @@
 # Mochis: Ruta Robada
 
-Un juego de mundo abierto con vista desde arriba, hecho sobre **las calles reales de Los Mochis, Sinaloa**,
+Un juego de mundo abierto en 3D con cámara en tercera persona, hecho sobre **las calles reales de Los Mochis, Sinaloa**,
 tomadas de OpenStreetMap. Roba carros, haz encargos para el taller y escápate de la patrulla.
 
 ## Cómo jugar
 
-Abre `index.html` en el navegador (doble clic; no requiere servidor ni instalación).
+Abre `mochis-juego.html` (todo en un solo archivo) o `index.html` en el navegador; no requiere servidor ni instalación.
 También funciona en el celular con controles táctiles.
 
 Para jugarlo desde una URL, activa **GitHub Pages** en el repositorio
@@ -15,11 +15,11 @@ Para jugarlo desde una URL, activa **GitHub Pages** en el repositorio
 
 | Acción | Teclado | Celular |
 |---|---|---|
-| Caminar / manejar | WASD o flechas | Joystick (izquierda) |
+| Caminar (W/S avanzar, A/D girar) / manejar | WASD o flechas | Joystick (izquierda) |
 | Robar carro / bajarse | E | 🚗 |
 | Freno de mano (a pie: correr) | Espacio | ✋ |
-| Disparar | J o clic (apunta con el mouse) | 🔫 (apunta solo) |
-| Mapa de la ciudad | M | 🗺️ |
+| Disparar (apunta solo al más cercano) | J o clic | 🔫 |
+| Mapa de la ciudad (arrastra, zoom, toca para teletransportarte) | M | 🗺️ |
 | Claxon | H | — |
 
 ### Qué hay en la ciudad
@@ -27,6 +27,12 @@ Para jugarlo desde una URL, activa **GitHub Pages** en el repositorio
 - **Calles reales**: bulevares, avenidas y calles con sus nombres reales (Blvd. Antonio Rosales,
   Av. Independencia, Blvd. Centenario, Calle Gabriel Leyva Solano…). El nombre aparece en pantalla
   al pasar por ellas. Las calles de un solo sentido se respetan en el tráfico.
+- **Siempre sabes dónde estás**: el HUD muestra la calle actual, *entre qué calles* vas y el lugar real más cercano.
+- **Lugares reales** de OpenStreetMap (~300): Plaza Fiesta, Plaza Sendero, Sagrado Corazón de Jesús,
+  Hospital General, UAS, Tecnológico de Los Mochis, bancos, gasolineras, restaurantes… Los más importantes
+  tienen un edificio emblemático (torre de iglesia, cruz de hospital, plaza comercial, estadio…).
+- **Mapa interactivo**: arrastra para moverlo, rueda o pellizco para acercar (con nombres de calles al acercar)
+  y toca cualquier punto para teletransportarte ahí.
 - **Parques y canales** de OpenStreetMap (Parque Sinaloa, Ciudad Deportiva, canales de riego…).
 - **Tráfico y peatones** que circulan por las calles.
 - **7 tipos de vehículo**: Sedán, Vocho, Troca, Deportivo, Taxi, Camión Urbano y Patrulla.
@@ -40,7 +46,9 @@ Para jugarlo desde una URL, activa **GitHub Pages** en el repositorio
 
 ## Archivos
 
-- `index.html`, `style.css`, `game.js` — el juego (JavaScript puro con Canvas 2D, sin dependencias).
+- `index.html`, `style.css`, `game.js` — el juego (JavaScript + three.js para el 3D).
+- `lib/three.min.js` — three.js r149 (licencia MIT).
+- `mochis-juego.html` — todo junto en un archivo (se genera con `python3 tools/bundle.py`).
 - `data/mochis.js` — el mapa ya procesado.
 - `tools/build_map.py` — genera `data/mochis.js` a partir de OpenStreetMap.
 - `tools/overpass_query.txt` — consulta de Overpass que descarga las calles de Los Mochis.
@@ -50,7 +58,9 @@ Para jugarlo desde una URL, activa **GitHub Pages** en el repositorio
 ```bash
 pip install shapely
 curl --data-urlencode data@tools/overpass_query.txt https://overpass-api.de/api/interpreter -o raw.json
-python3 tools/build_map.py raw.json data/mochis.js
+curl --data-urlencode data@tools/overpass_pois.txt https://overpass-api.de/api/interpreter -o lugares.json
+python3 tools/build_map.py raw.json data/mochis.js lugares.json
+python3 tools/bundle.py
 ```
 
 Las calles, parques y canales son datos reales; los **edificios se generan** a lo largo de las calles
